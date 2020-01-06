@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        body {
+            background: #c4c39f;
+        }
+
+        #game {
+            border-radius: 20px;
+            margin: auto;
+            width: 800px;
+            height: 700px;
+            background-image: url(./5.jpg);
+            cursor: url(./7.gif) 50 50, auto;
+            overflow: hidden;
+            position: relative;
+            top: 80px;
+        }
+
+        #game img {
+            height: 150px;
+            position: absolute;
+        }
+        #im{
+            position: relative;
+            top: -132px;
+            left: 248px;
+            width: 270px;
+            height: 270px;
+        }
+        #data{
+            position: relative;
+            top: -352px;
+            left: 305px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id='game'></div>
+    <img src="./9.png"  id="im" alt="">
+    <div id="data">
+        目前最高分<span id="highNameText">沒有人</span>的分數<span id="highscoreText"></span><br>
+        <p>剩餘<span id='sec'>15</span></p>
+        <p>分數<span id='score'>0</span></p>
+        <input type="button" value="開始遊戲" id='start'>
+    </div>
+    <script src="./jquery-3.4.1.min.js"></script>
+    <script>
+        $(function () {
+            let high = { name: "", score: 0 };
+            let highNameText = document.getElementById("highNameText");
+            let highscoreText = document.getElementById("highscoreText");
+            let highStorage = window.localStorage.getItem("highscore");
+
+
+            if (highStorage != null) {
+                high = JSON.parse(highStorage);
+                highNameText.innerText = high.name;
+                highscoreText.innerText = high.score;
+            }
+
+            //分數
+            let score = 0;
+            //遊戲時間
+            let sec = 15;
+
+
+            //遊戲時間
+            let gametimer = 0;
+
+            //殭屍的流水號
+            let zbid = 0;
+
+            function rand(num) {
+                return Math.round(Math.random() * num);
+            }
+
+            //移動殭屍
+            function movezb(id) {
+                //先執行一次移動，再呼叫自己繼續移動(每三秒一次)
+                $(`#zb${zbid}`).animate({
+                    left: rand(100) + "%",
+                    top: rand(50,100) + "%"
+                }, 3000, function () {
+                    movezb(id);
+                })
+
+            }
+
+
+
+            $("#start").on("click", function () {
+                //讓開始按鈕失效
+                $(this).attr("disabled", true);
+
+                //重設時間及分數
+                sec = 15;
+                $("#sec").text(sec)
+
+                score = 0;
+                $("#score").text(score)
+
+                // 開始倒數
+                gametimer = setInterval(() => {
+                    // 每秒 -1 ，修改文字
+                    sec--;
+                    $("#sec").text(sec);
+
+                    //如果到 0
+                    if (sec == 0) {
+                        clearInterval(gametimer);
+                        //按鈕有效
+                        $(this).attr("disabled", false);
+                        setTimeout(() => {
+                            alert("時間到");
+                            $("#game img").remove();
+                        }, 100);
+                    }
+
+                    //1~10 亂數
+                    let num = rand(10)
+                    if (num > 0) {
+                        // append 插入html
+                        //給殭屍id讓它出現在不同位置
+                        $("#game").append(`<img src="2.gif" id="zb${zbid}">`);
+                        $(`#zb${zbid}`).css(
+                            {
+                                left: rand(100) + "%",
+                                top: rand(50,100) + "%"
+                            });
+                        movezb(zbid);
+                        zbid++;
+
+                    }
+
+
+                    if (score > high.score) {
+                        let playerName = prompt("恭喜你得到最高分，請輸入你的名字");
+                        high.name = playerName;
+                        highNameText.innerText = playerName;
+                        high.score = score;
+                        highscoreText.innerText = score;
+                        //  window.localStorage 將值存在網頁 applicatioin 的 localStorage
+                        // window.localStorage.setItem 只能存文字
+                        // josn.stringify 可以將 json 陣列轉成文字
+                        window.localStorage.setItem("highscore", JSON.stringify(high));
+                    }
+
+
+                }, 1000);
+            })
+            // $("#gmae img").on("click",function() 錯誤 因為開始沒有img 後來才加進去的
+            // on("click","img",function() 要換寫法 ， 偵測有沒img
+            $("#game").on("click", "img", function () {
+                $(this).attr("src", "./3.gif");
+                $(this).stop();
+                // 始點及無效
+                $(this).css("pointer-events", "none");
+                setTimeout(() => {
+                    $(this).attr("src", "");
+                }, 1000);
+                //加分數
+                score++;
+                $("#score").text(score);
+
+            })
+
+
+
+
+        })
+    </script>
+</body>
+
+</html>
